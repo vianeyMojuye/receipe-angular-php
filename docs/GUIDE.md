@@ -236,13 +236,13 @@ PHP brute.
 ### Étape 8 — Tester l'API
 
 ```bash
-curl http://localhost:8080/api/categories
+curl http://localhost:8090/api/categories
 
-curl -X POST http://localhost:8080/api/recettes \
+curl -X POST http://localhost:8090/api/recettes \
   -H "Content-Type: application/json" \
   -d '{"titre":"Tarte aux pommes","difficulte":"facile","nb_portions":6,"categories":[2],"personnes":[1]}'
 
-curl http://localhost:8080/api/recettes/1
+curl http://localhost:8090/api/recettes/1
 ```
 
 ### Étape 9 — Conteneuriser l'API (DevOps)

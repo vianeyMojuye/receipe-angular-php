@@ -20,9 +20,12 @@ Règles métier illustrées :
 docker compose up --build
 ```
 
-- Front-end : http://localhost:4200
-- API : http://localhost:8080/api/recettes
+- Front-end : http://localhost:4300
+- API : http://localhost:8090/api/recettes
 - Base de données : `localhost:5432` (user `recette_user` / db `recette_db`)
+
+> Ports choisis pour éviter les conflits avec d'autres projets locaux (ex. un `ng serve` déjà sur
+> le 4200). Changez-les dans `docker-compose.yml` si besoin.
 
 Le schéma SQL (`db/schema.sql`) est exécuté automatiquement au premier démarrage du conteneur `db`.
 
