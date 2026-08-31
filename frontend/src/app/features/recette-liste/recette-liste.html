@@ -1,0 +1,19 @@
+<section class="liste">
+  @if (chargement()) {
+    <p>Chargement des recettes…</p>
+  } @else if (erreur()) {
+    <p class="liste__erreur">{{ erreur() }}</p>
+  } @else if (recettes().length === 0) {
+    <p>Aucune recette pour le moment. Créez la première !</p>
+  } @else {
+    <div class="liste__grille">
+      @for (recette of recettes(); track recette.id) {
+        <a class="carte" [routerLink]="['/recettes', recette.id]">
+          <h3>{{ recette.titre }}</h3>
+          <p>{{ recette.description }}</p>
+          <span class="carte__badge">{{ recette.difficulte }}</span>
+        </a>
+      }
+    </div>
+  }
+</section>

@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: recette_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: recette_db
+      POSTGRES_USER: recette_user
+      POSTGRES_PASSWORD: recette_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U recette_user -d recette_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./backend
+    container_name: recette_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: recette_db
+      DB_USER: recette_user
+      DB_PASSWORD: recette_pass
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/app
+      - /app/vendor
+
+  web:
+    build: ./frontend
+    container_name: recette_web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  db_data:

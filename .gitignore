@@ -1,0 +1,19 @@
+# Backend (PHP)
+/backend/vendor/
+/backend/.env
+/backend/composer.lock
+
+# Frontend (Angular) — voir aussi frontend/.gitignore
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.angular/
+
+# Environnements / secrets
+.env
+.env.local
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,40 @@
+@if (chargement()) {
+  <p>Chargement…</p>
+} @else if (recette(); as r) {
+  <article class="detail">
+    <h2>{{ r.titre }}</h2>
+    <p>{{ r.description }}</p>
+
+    <ul class="detail__meta">
+      <li>⏱ Préparation : {{ r.temps_preparation ?? '—' }} min</li>
+      <li>🔥 Cuisson : {{ r.temps_cuisson ?? '—' }} min</li>
+      <li>🍽 Portions : {{ r.nb_portions }}</li>
+      <li>📈 Difficulté : {{ r.difficulte }}</li>
+    </ul>
+
+    <section>
+      <h3>Catégories</h3>
+      <ul>
+        @for (categorie of r.categories; track categorie.id) {
+          <li>{{ categorie.nom }}</li>
+        }
+      </ul>
+    </section>
+
+    <section>
+      <h3>Créée par</h3>
+      <ul>
+        @for (auteur of r.auteurs; track auteur.id) {
+          <li>{{ auteur.prenom }} {{ auteur.nom }} ({{ auteur.role }})</li>
+        }
+      </ul>
+    </section>
+
+    <section>
+      <h3>Instructions</h3>
+      <p>{{ r.instructions }}</p>
+    </section>
+  </article>
+} @else {
+  <p>Recette introuvable.</p>
+}

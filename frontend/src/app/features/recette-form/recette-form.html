@@ -1,0 +1,68 @@
+<form class="formulaire" [formGroup]="form" (ngSubmit)="soumettre()">
+  <h2>Nouvelle recette</h2>
+
+  <label>
+    Titre
+    <input type="text" formControlName="titre" />
+  </label>
+
+  <label>
+    Description
+    <textarea formControlName="description"></textarea>
+  </label>
+
+  <label>
+    Instructions
+    <textarea formControlName="instructions" rows="5"></textarea>
+  </label>
+
+  <div class="formulaire__ligne">
+    <label>
+      Préparation (min)
+      <input type="number" formControlName="temps_preparation" />
+    </label>
+
+    <label>
+      Cuisson (min)
+      <input type="number" formControlName="temps_cuisson" />
+    </label>
+
+    <label>
+      Portions
+      <input type="number" formControlName="nb_portions" />
+    </label>
+
+    <label>
+      Difficulté
+      <select formControlName="difficulte">
+        <option value="facile">Facile</option>
+        <option value="moyen">Moyen</option>
+        <option value="difficile">Difficile</option>
+      </select>
+    </label>
+  </div>
+
+  <fieldset formArrayName="categories">
+    <legend>Catégories</legend>
+    @for (categorie of categoriesDisponibles(); track categorie.id; let i = $index) {
+      <label class="case">
+        <input type="checkbox" [formControlName]="i" />
+        {{ categorie.nom }}
+      </label>
+    }
+  </fieldset>
+
+  <fieldset formArrayName="personnes">
+    <legend>Co-créateurs</legend>
+    @for (personne of personnesDisponibles(); track personne.id; let i = $index) {
+      <label class="case">
+        <input type="checkbox" [formControlName]="i" />
+        {{ personne.prenom }} {{ personne.nom }}
+      </label>
+    }
+  </fieldset>
+
+  <button type="submit" [disabled]="envoiEnCours()">
+    {{ envoiEnCours() ? 'Enregistrement…' : 'Créer la recette' }}
+  </button>
+</form>
