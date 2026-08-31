@@ -25,6 +25,25 @@ $recette = new RecetteController();
 $categorie = new CategorieController();
 $personne = new PersonneController();
 
+$router->get('#^/api/?$#', function (): void {
+    Response::json([
+        'message' => 'API Recettes',
+        'documentation' => '/docs.html',
+        'openapi' => '/openapi.yaml',
+        'endpoints' => [
+            'GET /api/recettes' => 'Lister les recettes (filtres optionnels ?categorie= et ?personne=)',
+            'GET /api/recettes/{id}' => "Détail d'une recette (catégories + auteurs)",
+            'POST /api/recettes' => 'Créer une recette',
+            'PUT /api/recettes/{id}' => 'Modifier une recette',
+            'DELETE /api/recettes/{id}' => 'Supprimer une recette',
+            'GET /api/categories' => 'Lister les catégories',
+            'POST /api/categories' => 'Créer une catégorie',
+            'GET /api/personnes' => 'Lister les personnes',
+            'POST /api/personnes' => 'Créer une personne',
+        ],
+    ]);
+});
+
 $router->get('#^/api/recettes$#', [$recette, 'index']);
 $router->get('#^/api/recettes/(\d+)$#', [$recette, 'show']);
 $router->post('#^/api/recettes$#', [$recette, 'store']);

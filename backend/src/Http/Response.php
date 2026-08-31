@@ -12,7 +12,7 @@ final class Response
         header('Content-Type: application/json; charset=utf-8');
 
         if ($data !== null) {
-            echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
         }
     }
 }
