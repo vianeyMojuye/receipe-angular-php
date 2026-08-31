@@ -1,0 +1,263 @@
+openapi: 3.0.3
+info:
+  title: API Recettes
+  description: >
+    API REST pédagogique de gestion de recettes de cuisine. Permet de gérer des recettes
+    co-créées par plusieurs personnes et classées dans plusieurs catégories.
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8090/api
+    description: Local (Docker Compose)
+
+tags:
+  - name: Recettes
+  - name: Categories
+  - name: Personnes
+
+paths:
+  /recettes:
+    get:
+      tags: [Recettes]
+      summary: Lister les recettes
+      parameters:
+        - name: categorie
+          in: query
+          description: Filtrer par identifiant de catégorie
+          schema: { type: integer }
+        - name: personne
+          in: query
+          description: Filtrer par identifiant de créateur
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Liste des recettes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RecetteResume" }
+    post:
+      tags: [Recettes]
+      summary: Créer une recette
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RecetteInput" }
+      responses:
+        "201":
+          description: Recette créée
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RecetteDetail" }
+        "422":
+          description: Validation échouée (titre manquant)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Erreur" }
+
+  /recettes/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Recettes]
+      summary: Détail d'une recette (avec catégories et auteurs)
+      responses:
+        "200":
+          description: Détail de la recette
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RecetteDetail" }
+        "404":
+          description: Recette introuvable
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Erreur" }
+    put:
+      tags: [Recettes]
+      summary: Modifier une recette
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RecetteInput" }
+      responses:
+        "200":
+          description: Recette mise à jour
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RecetteDetail" }
+        "422":
+          description: Validation échouée
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Erreur" }
+    delete:
+      tags: [Recettes]
+      summary: Supprimer une recette
+      responses:
+        "204":
+          description: Recette supprimée (pas de contenu)
+
+  /categories:
+    get:
+      tags: [Categories]
+      summary: Lister les catégories
+      responses:
+        "200":
+          description: Liste des catégories
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Categorie" }
+    post:
+      tags: [Categories]
+      summary: Créer une catégorie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CategorieInput" }
+      responses:
+        "201":
+          description: Catégorie créée
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Categorie" }
+        "422":
+          description: Validation échouée (nom manquant)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Erreur" }
+
+  /personnes:
+    get:
+      tags: [Personnes]
+      summary: Lister les personnes
+      responses:
+        "200":
+          description: Liste des personnes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Personne" }
+    post:
+      tags: [Personnes]
+      summary: Créer une personne
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PersonneInput" }
+      responses:
+        "201":
+          description: Personne créée
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Personne" }
+        "422":
+          description: Validation échouée (nom/prenom/email manquants)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Erreur" }
+
+components:
+  schemas:
+    Difficulte:
+      type: string
+      enum: [facile, moyen, difficile]
+
+    RecetteResume:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        titre: { type: string, example: "Tarte aux pommes" }
+        description: { type: string, nullable: true }
+        instructions: { type: string, nullable: true }
+        temps_preparation: { type: integer, nullable: true, description: "en minutes" }
+        temps_cuisson: { type: integer, nullable: true, description: "en minutes" }
+        difficulte: { $ref: "#/components/schemas/Difficulte" }
+        nb_portions: { type: integer, example: 6 }
+        date_creation: { type: string, format: date-time }
+        date_modification: { type: string, format: date-time }
+
+    RecetteDetail:
+      allOf:
+        - { $ref: "#/components/schemas/RecetteResume" }
+        - type: object
+          properties:
+            categories:
+              type: array
+              items: { $ref: "#/components/schemas/Categorie" }
+            auteurs:
+              type: array
+              items: { $ref: "#/components/schemas/Auteur" }
+
+    RecetteInput:
+      type: object
+      required: [titre]
+      properties:
+        titre: { type: string }
+        description: { type: string }
+        instructions: { type: string }
+        temps_preparation: { type: integer }
+        temps_cuisson: { type: integer }
+        difficulte: { $ref: "#/components/schemas/Difficulte" }
+        nb_portions: { type: integer, default: 4 }
+        categories:
+          type: array
+          items: { type: integer }
+          description: Identifiants des catégories associées
+        personnes:
+          type: array
+          items: { type: integer }
+          description: Identifiants des personnes co-créatrices
+
+    Categorie:
+      type: object
+      properties:
+        id: { type: integer }
+        nom: { type: string, example: "Dessert" }
+        description: { type: string, nullable: true }
+
+    CategorieInput:
+      type: object
+      required: [nom]
+      properties:
+        nom: { type: string }
+        description: { type: string }
+
+    Personne:
+      type: object
+      properties:
+        id: { type: integer }
+        nom: { type: string }
+        prenom: { type: string }
+        email: { type: string, format: email }
+        date_inscription: { type: string, format: date-time }
+
+    PersonneInput:
+      type: object
+      required: [nom, prenom, email]
+      properties:
+        nom: { type: string }
+        prenom: { type: string }
+        email: { type: string, format: email }
+
+    Auteur:
+      type: object
+      properties:
+        id: { type: integer }
+        nom: { type: string }
+        prenom: { type: string }
+        role: { type: string, example: "auteur" }
+
+    Erreur:
+      type: object
+      properties:
+        error: { type: string }

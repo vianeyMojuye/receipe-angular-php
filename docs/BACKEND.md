@@ -192,6 +192,139 @@ Angular fait `GET /api/recettes/3` :
 6. Le controller passe le résultat à `Response::json(...)`.
 7. Le client Angular reçoit un JSON propre avec le bon code HTTP.
 
+## 11. Documenter l'API : OpenAPI + Swagger UI
+
+Deux fichiers statiques dans `public/`, servis tels quels par le serveur PHP intégré (ils ne
+passent pas par le routeur — voir §10, le serveur ne route vers `index.php` que si le fichier
+demandé n'existe pas physiquement) :
+
+- **`public/openapi.yaml`** : la spécification **OpenAPI 3.0** de l'API — chaque route, ses
+  paramètres, ses schémas de requête/réponse, ses codes HTTP. C'est un contrat, pas du code :
+  n'importe quel outil (Swagger, Postman, un générateur de client TypeScript…) peut le lire.
+- **`public/docs.html`** : une page **Swagger UI** (chargée depuis un CDN, aucune dépendance à
+  installer) qui lit `openapi.yaml` et affiche une interface interactive pour explorer et
+  tester chaque endpoint directement dans le navigateur.
+
+Accès : http://localhost:8090/docs.html (le spec brut est sur `/openapi.yaml`).
+
+**Point à souligner** : la doc et le code peuvent diverger avec le temps si on oublie de mettre
+à jour le YAML après avoir changé un contrôleur — ce n'est pas généré automatiquement à partir
+du code ici (contrairement à des libs comme `zircote/swagger-php` qui lisent des annotations).
+Pour ce projet pédagogique, le fichier écrit à la main garde les choses simples et lisibles.
+
+## 12. Initialiser un projet de ce genre from scratch
+
+Ce qui suit est la séquence réelle de commandes pour partir d'un **dossier vide** et arriver à
+la structure de ce dépôt. Utile si vous démarrez un nouveau projet API PHP sans framework.
+
+### Prérequis
+
+- PHP ≥ 8.2 en ligne de commande (`php -v`)
+- [Composer](https://getcomposer.org/) (`composer.phar` ou `composer` dans le PATH)
+- Docker Desktop (optionnel mais recommandé — évite d'installer l'extension `pdo_pgsql` en
+  local, voir §9)
+
+### Étape 1 — Structure de dossiers
+
+```bash
+mkdir -p backend/public backend/src/Config backend/src/Http backend/src/Controllers backend/src/Repositories
+cd backend
+```
+
+`src/` = code métier (autoloadé par Composer), `public/` = tout ce qui doit être exposé
+publiquement par le serveur web — un seul fichier PHP y suffit (`index.php`), le reste
+(`src/`) reste inatteignable directement en HTTP.
+
+### Étape 2 — `composer.json` et autoload PSR-4
+
+Écrivez-le directement (plus prévisible pour un cours que l'assistant interactif
+`composer init`) :
+
+```json
+{
+    "name": "votre-org/votre-api",
+    "type": "project",
+    "require": {
+        "php": ">=8.2",
+        "ext-pdo": "*",
+        "ext-pdo_pgsql": "*"
+    },
+    "autoload": {
+        "psr-4": { "App\\": "src/" }
+    }
+}
+```
+
+```bash
+composer install
+```
+
+> Si votre PHP local (hors Docker) n'a pas `pdo_pgsql` installé (fréquent sous WAMP/XAMPP),
+> `composer install` refusera avec *"the requested PHP extension pdo_pgsql is missing"*.
+> C'est normal : l'extension sera présente **dans le conteneur Docker** (§9). Pour générer
+> quand même `vendor/autoload.php` en local :
+> ```bash
+> composer install --ignore-platform-req=ext-pdo_pgsql
+> ```
+
+### Étape 3 — Écrire le code, dans cet ordre
+
+L'ordre compte : chaque couche dépend de la précédente, donc les écrire dans ce sens évite les
+allers-retours.
+
+1. `src/Config/Database.php` — la connexion (§7). Rien ne fonctionne sans elle.
+2. `src/Http/Response.php` — le formateur JSON (§8). Utilisé par tout le reste.
+3. `src/Http/Router.php` — le routeur (§4). Ne dépend de rien d'autre ici.
+4. `src/Repositories/*.php` — un repository par entité (§6), utilise `Database`.
+5. `src/Controllers/*.php` — un contrôleur par entité (§5), utilise son repository + `Response`.
+6. `public/index.php` — le front controller (§3) qui assemble tout : instancie le routeur,
+   déclare les routes, chaque route pointant vers `[$controller, 'methode']`.
+
+### Étape 4 — Variables d'environnement
+
+Créez `.env.example` (jamais `.env` avec de vraies valeurs — celui-là va dans `.gitignore`) :
+
+```
+DB_HOST=db
+DB_PORT=5432
+DB_NAME=recette_db
+DB_USER=recette_user
+DB_PASSWORD=recette_pass
+```
+
+`Database.php` les lit via `getenv()`, avec des valeurs par défaut de secours pour le
+développement local.
+
+### Étape 5 — Conteneuriser (voir GUIDE.md §4 pour le détail)
+
+`Dockerfile` (image, extension `pdo_pgsql`, commande de démarrage) + `docker-compose.yml` à la
+racine du dépôt (services `db`, `api`, `web`). `docker compose up --build` construit et démarre
+tout.
+
+### Étape 6 — Vérifier avant de documenter
+
+```bash
+php -l public/index.php src/**/*.php   # vérifie qu'il n'y a pas d'erreur de syntaxe
+curl http://localhost:8090/api/categories
+```
+
+### Étape 7 — Documenter l'API
+
+Une fois les routes stabilisées, écrivez `public/openapi.yaml` + `public/docs.html` (§11) —
+faites-le en dernier : documenter une API qui bouge encore, c'est de la doc à refaire deux fois.
+
+### Étape 8 — Versionner
+
+```bash
+git init
+# .gitignore doit exclure vendor/, .env, composer.lock (optionnel), node_modules/, dist/
+git add .
+git commit -m "Initial commit"
+git remote add origin <url-de-votre-depot>
+git branch -M master
+git push -u origin master
+```
+
 ## En résumé
 
 Pas de framework, pas de librairie tierce — uniquement PHP 8.3 natif + PDO. La structure imite un pattern **MVC allégé** (Router/Controller/Repository) codé à la main, ce qui est un bon exercice pédagogique pour comprendre ce qu'un framework comme Laravel fait pour toi en coulisses.

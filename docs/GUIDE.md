@@ -258,6 +258,12 @@ CMD ["php", "-S", "0.0.0.0:8080", "-t", "public"]
 > Le serveur intégré de PHP suffit pour un environnement pédagogique. En production, on le
 > remplacerait par PHP-FPM derrière Nginx (`--dev` vs `--prod`).
 
+### Étape 10 — Documenter l'API (OpenAPI + Swagger UI)
+
+`public/openapi.yaml` décrit chaque route en OpenAPI 3.0 ; `public/docs.html` charge
+Swagger UI (CDN) pour l'explorer et la tester dans le navigateur, sans rien installer :
+http://localhost:8090/docs.html. Détail dans [`docs/BACKEND.md §11`](./BACKEND.md).
+
 ---
 
 ## 3. Maquette du front-end Angular v21

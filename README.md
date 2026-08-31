@@ -22,6 +22,7 @@ docker compose up --build
 
 - Front-end : http://localhost:4300
 - API : http://localhost:8090/api/recettes
+- Documentation API (Swagger UI) : http://localhost:8090/docs.html
 - Base de données : `localhost:5432` (user `recette_user` / db `recette_db`)
 
 > Ports choisis pour éviter les conflits avec d'autres projets locaux (ex. un `ng serve` déjà sur
